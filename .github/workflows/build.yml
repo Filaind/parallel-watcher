@@ -1,0 +1,29 @@
+name: Publish NPM Package API
+
+on: workflow_dispatch
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./api
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+      - run: npm install
+      - run: npm run build
+      - run: |
+          echo @mpprod:https://npm.pkg.github.com/ > dist/.npmrc
+          echo '//npm.pkg.github.com/:_authToken=${NPM_TOKEN}' >> dist/.npmrc
+          cp package.json dist/package.json
+          cp README.md dist/README.md
+      - run: npm publish
+        working-directory: ./api/dist
+        env:
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }}
